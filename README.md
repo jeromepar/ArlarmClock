@@ -19,3 +19,8 @@
 ...basic controls would be provided by vibration (patting it) or tilting it left or right
 1. This have to be a DAC (not decided if it needs RAM or I2C/SPI yet), and the same goes for the amplifier
 1. Input isn't complicated, but i'm afraid not beeing able to dim the LEDs or the screen enought.
+
+## Repository Contents:
+- BOM
+- Architecture (Hard) diagram
+- Small piece of arduino code to test the components one by one
