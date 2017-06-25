@@ -1,0 +1,6 @@
+diagram : remove 100ms for tilt_senso -> 20ms
+
+
+sensors: implement accelerometer
+sensors: complete luminosity
+sensors: complete battery use
