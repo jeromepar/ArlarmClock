@@ -8,6 +8,7 @@
 #ifndef SENSORMANAGEMENT_H_
 #define SENSORMANAGEMENT_H_
 
+#include "Arduino.h"
 #include "TiltSensor.h"
 #include "CyclicTimer.h"
 
