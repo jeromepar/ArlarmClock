@@ -7,13 +7,7 @@
 #ifndef _AlarmClock_H_
 #define _AlarmClock_H_
 #include "Arduino.h"
-//add your includes for the project AlarmClock here
 
-
-//end of add your includes here
-
-
-//add your function definitions for the project AlarmClock here
 
 
 

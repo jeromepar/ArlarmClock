@@ -8,7 +8,6 @@
 #include "sensormanagement.h"
 
 Sensor_management::Sensor_management() {
-	// TODO Auto-generated constructor stub
 	tilt_sensor_nbr_of_shakes = 0;
 }
 

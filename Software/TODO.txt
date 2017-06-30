@@ -1,6 +1,11 @@
 diagram : remove 100ms for tilt_senso -> 20ms
 
+main: connect Alarm & wifi status to LEDs management
 
 sensors: implement accelerometer
 sensors: complete luminosity
 sensors: complete battery use
+
+ledManagement: link between luminosity & PWM
+
+Fonction for wifi polling
