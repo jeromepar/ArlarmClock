@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cdtprojectproperties>
+<section name="org.eclipse.cdt.internal.ui.wizards.settingswizards.IncludePaths">
+<language name="C++ Source File">
+<includepath workspace_path="true">/AlarmClock/core/core</includepath>
+<includepath workspace_path="true">/AlarmClock/core/variant</includepath>
+<includepath workspace_path="true">/AlarmClock/CyclicTimer</includepath>
+<includepath workspace_path="true">/AlarmClock/TiltSensor</includepath>
+<includepath workspace_path="true">/AlarmClock/TimeManagement</includepath>
+<includepath workspace_path="true">/AlarmClock/Timer</includepath>
+
+</language>
+<language name="C Source File">
+<includepath workspace_path="true">/AlarmClock/core/core</includepath>
+<includepath workspace_path="true">/AlarmClock/core/variant</includepath>
+
+</language>
+<language name="Assembly Source File">
+<includepath workspace_path="true">/AlarmClock/core/core</includepath>
+<includepath workspace_path="true">/AlarmClock/core/variant</includepath>
+<includepath workspace_path="true">/AlarmClock/TiltSensor</includepath>
+<includepath workspace_path="true">/AlarmClock/CyclicTimer</includepath>
+<includepath workspace_path="true">/AlarmClock/TimeManagement</includepath>
+<includepath workspace_path="true">/AlarmClock/Timer</includepath>
+
+</language>
+</section>
+<section name="org.eclipse.cdt.internal.ui.wizards.settingswizards.Macros">
+<language name="C++ Source File">
+
+</language>
+<language name="C Source File">
+
+</language>
+<language name="Assembly Source File">
+
+</language>
+</section>
+</cdtprojectproperties>

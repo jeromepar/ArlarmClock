@@ -7,7 +7,7 @@
 
 #include "time_esp8266.h"
 
-CyclicTimer every1h = CyclicTimer(60*60*1000);
+CyclicTimer every1h = CyclicTimer(60UL*60UL*1000UL);
 
 void update_time_if_necessary(TimeManagement *time){
 	if (every1h.watch())

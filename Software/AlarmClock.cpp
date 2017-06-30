@@ -3,6 +3,7 @@
 #include "sensormanagement.h"
 #include "ledManagement.h"
 #include "time_esp8266.h"
+#include "Alarmmanagement.h"
 #include "tools.h"
 
 static Sensor_management sensor_mngt;
@@ -18,6 +19,26 @@ void setup()
 	//init of time (Monday 0h0)
 	time.setTime(0);
 
+}
+
+typedef enum  {
+	e_UI_default,
+	e_UI_MAX
+} e_state_UI;
+
+void UI(Sensor_management * sensor_mngt, Alarm_management * alarm){
+
+	static e_state_UI state = e_UI_default;
+	switch(state){
+	case e_UI_default:
+
+
+		break;
+
+	default:
+		ERROR(__FILE__,__LINE__);
+		break;
+	}
 }
 
 void loop()
@@ -39,6 +60,9 @@ void loop()
 	update_time_if_necessary(&time);
 
 	//TODO display time
+
+	//UserInterface
+	UI(&sensor_mngt,&alarm);
 
 	//alarm management with time updated
 	alarm.watch(time.getTime());

@@ -8,7 +8,7 @@
 #define _AlarmClock_H_
 #include "Arduino.h"
 
-
+#define ERROR(file,line)	({char s[100]; sprintf(s,"ERROR %s:%d",file, line); Serial.println(s);})
 
 
 
