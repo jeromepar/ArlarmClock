@@ -9,10 +9,11 @@
 #define SENSORMANAGEMENT_H_
 
 #include "Arduino.h"
+#include "AlarmClock.h"
 #include "TiltSensor.h"
 #include "CyclicTimer.h"
 
-#define TILT_SENSOR_PIN  000000
+#define TILT_SENSOR_PIN  PIN_D1
 
 class Sensor_management {
 private:

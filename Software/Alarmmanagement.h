@@ -45,6 +45,10 @@ public:
 	void disable();
 
 	void watch(long currentTime_in_s);
+	void getCurrentAlarm(int *hours, int *minutes);
+
+	void getNextAlarm(int *hours, int *minutes, bool from_start=false);
+	void setCurrentAlarm(int hours, int minutes);
 };
 
 #endif /* ALARMMANAGEMENT_H_ */
