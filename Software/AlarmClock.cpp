@@ -21,6 +21,7 @@ void setup()
 	VERBOSE(Serial.println("Initializing..."));
 
 	//init of sensors reading
+	sensor_mngt.init();
 	sensor_mngt.update_data();
 
 	//set the display to maximum brightness
@@ -51,6 +52,7 @@ void UI(Sensor_management * sensor_mngt, Alarm_management * alarm, TimeManagemen
 
 	bool update_display = false;
 	static int luminosity=0;
+	static e_orientationZ orien_Z=e_orientationZ_head_up;
 
 
 	int tilt_sensor_shakes = sensor_mngt->get_tilt_sensor_shakes();
@@ -74,6 +76,16 @@ void UI(Sensor_management * sensor_mngt, Alarm_management * alarm, TimeManagemen
 				update_display = true;
 				luminosity = current_lum;
 			}
+		}
+	}
+
+	/* the display is updated if the orientation change */
+	{
+
+		e_orientationZ current_orientation = sensor_mngt->get_Zorientation();
+		if( current_orientation != orien_Z){
+			update_display = true;
+			orien_Z = current_orientation;
 		}
 	}
 
@@ -102,10 +114,9 @@ void UI(Sensor_management * sensor_mngt, Alarm_management * alarm, TimeManagemen
 			VERBOSE(Serial.print(hours*100+minutes));
 			VERBOSE(Serial.print(" lum:"));
 			VERBOSE(Serial.println((luminosity*7)/100));
-			//TODO : use the accelerometer to reverse the display
 
 			//use hours & minutes & luminosity
-			disp->showNumberDec(hours*100+minutes, true /*upside_down*/);
+			disp->showNumberDec(hours*100+minutes, (orien_Z==e_orientationZ_head_down));
 			disp->setBrightness((luminosity*7)/100);
 
 			//TODO : delimiter between hours & minutes
@@ -117,9 +128,8 @@ void UI(Sensor_management * sensor_mngt, Alarm_management * alarm, TimeManagemen
 			VERBOSE(Serial.println("Going to state e_UI_alarm_display"));
 			state = e_UI_alarm_display;
 			first_entry_in_state = true;
-		} else if (tilt_sensor_shakes==NBR_OF_TILTS_TO_SWITCH_TO_ALARM_SELECTION)
-		{
-			VERBOSE(Serial.println("Going to state e_UI_alarm_display"));
+		} else if (tilt_sensor_shakes==NBR_OF_TILTS_TO_WAKE_UP_TO_ALARM_MANAGEMENT) {
+			VERBOSE(Serial.println("Going to state e_UI_alarm_selection"));
 			state = e_UI_alarm_selection;
 			first_entry_in_state = true;
 		}
@@ -144,10 +154,9 @@ void UI(Sensor_management * sensor_mngt, Alarm_management * alarm, TimeManagemen
 			VERBOSE(Serial.print(hours*100+minutes));
 			VERBOSE(Serial.print(" lum:"));
 			VERBOSE(Serial.println((luminosity*7)/100));
-			//TODO : use the accelerometer to reverse the display
 
 			//use hours & minutes & luminosity
-			disp->showNumberDec(hours*100+minutes, true /*upside_down*/);
+			disp->showNumberDec(hours*100+minutes, (orien_Z==e_orientationZ_head_down));
 			disp->setBrightness((luminosity*7)/100);
 
 			//TODO : delimiter between hours & minutes
@@ -197,10 +206,9 @@ void UI(Sensor_management * sensor_mngt, Alarm_management * alarm, TimeManagemen
 			VERBOSE(Serial.print(hours*100+minutes));
 			VERBOSE(Serial.print(" lum:"));
 			VERBOSE(Serial.println((luminosity*7)/100));
-			//TODO : use the accelerometer to reverse the display
 
 			//use hours & minutes & luminosity
-			disp->showNumberDec(hours*100+minutes, true /*upside_down*/);
+			disp->showNumberDec(hours*100+minutes, (orien_Z==e_orientationZ_head_down));
 			disp->setBrightness((luminosity*7)/100);
 
 			//TODO : delimiter between hours & minutes
