@@ -7,16 +7,18 @@
 #include "TM1637Display.h"
 #include "timer.h"
 #include "tools.h"
+#include "myWifiForTime.h"
 
 static Sensor_management sensor_mngt;
 static TimeManagement time;
 static LEDs_management leds;
 static Alarm_management alarm;
+static myWifiForTime wifiTime;
 static TM1637Display AffSeg(AFFSEG_PIN_CLK, AFFSEG_PIN_DIO);  //set up the 4-Digit Display.
 
 void setup()
 {
-	VERBOSE(Serial.begin(19200));
+	VERBOSE(Serial.begin(115200));
 	delay(20);
 	VERBOSE(Serial.println("Initializing..."));
 
@@ -24,11 +26,16 @@ void setup()
 	sensor_mngt.init();
 	sensor_mngt.update_data();
 
+	//init for the wifi
+	wifiTime.init();
+	VERBOSE(Serial.println("time_requested"));
+	wifiTime.requestTime(); //at boot, get time
+
 	//set the display to maximum brightness
 	AffSeg.setBrightness(0x07);
 
-	//init of time (Monday 12h10)
-	time.setTime(12*60*60+10*60);
+	//init of time (Monday 00h00)
+	time.setTime(0);
 
 	VERBOSE(Serial.println("Init done!"));
 
@@ -101,11 +108,23 @@ void UI(Sensor_management * sensor_mngt, Alarm_management * alarm, TimeManagemen
 		/* check if time has change every 500ms -> we only display the minutes */
 		if (every500ms.watch())
 		{
+			static bool first_change = true;
 			int current_min = time->minute();
+			int current_hour = time->hour();
+
 			if( current_min != minutes){
+
 				update_display = true;
 				minutes = current_min;
-				hours = time->hour();
+
+				//we don't want to trigger an update on the init (time is changed there)
+				if( (!first_change) && (hours != current_hour) )
+				{
+					wifiTime.requestTime();
+					VERBOSE(Serial.println("time_requested"));
+					hours = current_hour;
+				}
+				first_change = false;
 			}
 		}
 
@@ -250,18 +269,26 @@ void loop()
 	leds.update(
 			sensor_mngt.get_luminosity(),
 			sensor_mngt.get_battery_use(),
-			false /* TODO wifi to be implemented */,
+			(wifiTime.getState()!=e_state_time_request_idle),
 			alarm.isActive());
 
 	//update
 	update_time_if_necessary(&time);
-
-	//TODO display time
 
 	//UserInterface
 	UI(&sensor_mngt,&alarm,&time,&AffSeg);
 
 	//alarm management with time updated
 	alarm.watch(time.getTime());
+
+	//wifi update
+	wifiTime.update();
+	if (wifiTime.getState()==e_state_time_request_time_available){
+		unsigned long error = time.setTime(wifiTime.getTimeReceived());
+#ifdef VERBOSE_ACTIVATED
+		Serial.print("time_updated, error on time (s) : ");
+		Serial.println(error);
+#endif
+	}
 
 }

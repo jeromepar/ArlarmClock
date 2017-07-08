@@ -15,7 +15,7 @@ Sensor_management::Sensor_management() {
 }
 
 void Sensor_management::init() {
-	if (!accelerometer.begin())
+	while (!accelerometer.begin())
 	{
 		VERBOSE(Serial.println("Could not find a valid ADXL345 sensor, check wiring!"));
 		delay(500);
