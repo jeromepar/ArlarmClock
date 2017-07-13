@@ -1,0 +1,54 @@
+display time :2049 lum:7
+display time :2050 lum:7
+display time :2051 lum:7
+display time :2052 lum:7
+display time :2053 lum:7
+display time :2054 lum:7
+time_requested
+display time :1943 lum:7
+error on time (s) : 4294963001
+time_requested
+display time :2054 lum:7
+display time :2055 lum:7
+error on time (s) : 0
+display time :2056 lum:7
+display time :2057 lum:7
+display time :2058 lum:7
+display time :2059 lum:7
+display time :2100 lum:7
+
+
+
+
+
+
+
+
+
+-------------- another run
+
+
+display time :2210 lum:7
+display time :2211 lum:7
+display time :2212 lum:7
+display time :2213 lum:7
+display time :2214 lum:7
+display time :2215 lum:7
+time_requested
+display time :2103 lum:7
+time_updated, error on time (s) : 4294963000
+time_requested
+display time :2215 lum:7
+time_updated, error on time (s) : 1
+display time :2216 lum:7
+display time :2217 lum:7
+display time :2218 lum:7
+
+
+
+where 21h03 was the restart hour
+
+hyp : pb in TimeManagement...
+seems to happened 48mn-70mn after the start
+
+micros in TimeManagement transformed to millis & cast in long

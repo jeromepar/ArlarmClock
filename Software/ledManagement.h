@@ -11,10 +11,10 @@
 #include "Arduino.h"
 #include "AlarmClock.h"
 
-/* TODO : proper affectation */
+/* TODO : proper affectation for PIN_BATTERY */
 #define PIN_BATTERY_LED PIN_D0
-#define PIN_WIFI_LED PIN_D0
-#define PIN_ALARM_LED PIN_D0
+#define PIN_WIFI_LED PIN_D3
+#define PIN_ALARM_LED PIN_D4
 
 class LEDs_management {
 private:

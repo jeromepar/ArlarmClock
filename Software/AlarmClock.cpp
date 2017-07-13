@@ -51,6 +51,22 @@ typedef enum  {
 void do_nothing(){}
 Timer timer_in_state(&do_nothing);
 
+//maximum delta +-59mn
+void addInterval(int delta_mn, int *hours, int *minutes){
+	*minutes+=delta_mn;
+	if (*minutes >= 60){
+		*minutes-=60;
+		*hours=(*hours+1)%24;
+	} else if (*minutes < 0) {
+		*minutes+=60;
+		//*hours=(*hours-1)%24; -> Not working with negative values
+		if ((*hours-1)<0){
+			*hours+=23;
+		} else {
+			*hours-=1;
+		}
+	}
+}
 
 void UI(Sensor_management * sensor_mngt, Alarm_management * alarm, TimeManagement *time, TM1637Display *disp){
 
@@ -63,6 +79,7 @@ void UI(Sensor_management * sensor_mngt, Alarm_management * alarm, TimeManagemen
 
 
 	int tilt_sensor_shakes = sensor_mngt->get_tilt_sensor_shakes();
+	e_orientationY Yorientation = sensor_mngt->get_Yorientation();
 
 #ifdef VERBOSE_ACTIVATED
 	if(tilt_sensor_shakes>0)
@@ -103,7 +120,7 @@ void UI(Sensor_management * sensor_mngt, Alarm_management * alarm, TimeManagemen
 	{
 		static CyclicTimer every500ms=CyclicTimer(500);
 		static int minutes = 0; //static because we want to compare it between 2 calls
-		static int hours = 0;
+		static int hours = 0;   //static because we want to compare it between 2 calls
 
 		/* check if time has change every 500ms -> we only display the minutes */
 		if (every500ms.watch())
@@ -120,10 +137,10 @@ void UI(Sensor_management * sensor_mngt, Alarm_management * alarm, TimeManagemen
 				//we don't want to trigger an update on the init (time is changed there)
 				if( (!first_change) && (hours != current_hour) )
 				{
-					wifiTime.requestTime();
+					//DEBUG1: commented in order to examine the error 1 wifiTime.requestTime();
 					VERBOSE(Serial.println("time_requested"));
-					hours = current_hour;
 				}
+				hours = current_hour;
 				first_change = false;
 			}
 		}
@@ -205,13 +222,31 @@ void UI(Sensor_management * sensor_mngt, Alarm_management * alarm, TimeManagemen
 	{
 		static int hours = 0;
 		static int minutes = 0;
+		static Timer timer_between_imputs(&do_nothing);
 
 		if(first_entry_in_state){
 			timer_in_state.start(MAX_TIME_SHOWING_ALARM_SELECTION);
 			alarm->getNextAlarm(&hours,&minutes,true /* from start */);
 			VERBOSE(Serial.println("Timer started & Next Alarm requested"));
-		} else if (tilt_sensor_shakes==1)
-		{
+
+		} else if ((Yorientation == e_orientationY_on_left) && (!timer_between_imputs.is_active()) ) {
+			VERBOSE(Serial.println("Orientation Left : -15mn"));
+			addInterval(-15,&hours, &minutes);
+			update_display = true;
+			timer_between_imputs.start(MIN_TIME_BETWEEN_INPUTS);
+			//restart timer (because of the new input)
+			timer_in_state.start(MAX_TIME_SHOWING_ALARM_SELECTION);
+
+		} else if ( (Yorientation == e_orientationY_on_right) && (!timer_between_imputs.is_active())) {
+			VERBOSE(Serial.println("Orientation Left : +15mn"));
+			addInterval(+15,&hours, &minutes);
+			update_display = true;
+			timer_between_imputs.start(MIN_TIME_BETWEEN_INPUTS);
+			//restart timer (because of the new input)
+			timer_in_state.start(MAX_TIME_SHOWING_ALARM_SELECTION);
+
+		} else if ( (tilt_sensor_shakes==2) && (!timer_between_imputs.is_active())) {
+			timer_between_imputs.start(MIN_TIME_BETWEEN_INPUTS);
 			//restart timer (because of the new input)
 			timer_in_state.start(MAX_TIME_SHOWING_ALARM_SELECTION);
 			//obtain next value
@@ -219,6 +254,7 @@ void UI(Sensor_management * sensor_mngt, Alarm_management * alarm, TimeManagemen
 			//display new value
 			update_display = true;
 		}
+
 		if(first_entry_in_state || update_display){
 
 			VERBOSE(Serial.print("Current selected alarm :"));
@@ -265,6 +301,9 @@ void loop()
 	/* Cyclic functions */
 	/********************/
 	sensor_mngt.update_data();
+
+	/* update alarm status according to the orientation */
+	(sensor_mngt.get_Zorientation()==e_orientationZ_head_up)?alarm.disable():alarm.enable();
 
 	leds.update(
 			sensor_mngt.get_luminosity(),

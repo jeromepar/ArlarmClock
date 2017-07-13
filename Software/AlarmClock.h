@@ -44,6 +44,7 @@
 
 #define MAX_TIME_SHOWING_CURRENT_ALARM		2000 //in ms
 #define MAX_TIME_SHOWING_ALARM_SELECTION	5000 //in ms
+#define MIN_TIME_BETWEEN_INPUTS				300 //in ms
 
 
 
