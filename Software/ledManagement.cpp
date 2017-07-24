@@ -14,6 +14,8 @@ LEDs_management::LEDs_management() {
 	wifi_state		=	false;
 	alarm_state		=	false;
 
+	alarm_state_blinking=false;
+
 	pinMode(PIN_BATTERY_LED, OUTPUT);
 	pinMode(PIN_WIFI_LED, OUTPUT);
 	pinMode(PIN_ALARM_LED, OUTPUT);
@@ -54,6 +56,10 @@ void LEDs_management::refresh_leds() {
 	analogWrite(PIN_BATTERY_LED, this->get_pwm()*(int)battery_state);
 	analogWrite(PIN_WIFI_LED, this->get_pwm()*(int)wifi_state);
 	analogWrite(PIN_ALARM_LED, this->get_pwm()*(int)alarm_state);
+}
+
+void LEDs_management::blinkAlarmLed(bool activate){
+	alarm_state_blinking=activate;
 }
 
 int LEDs_management::get_pwm() {

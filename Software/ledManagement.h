@@ -22,6 +22,7 @@ private:
 	bool battery_state;
 	bool wifi_state;
 	bool alarm_state;
+	bool alarm_state_blinking;
 	void refresh_leds();
 	int get_pwm();
 
@@ -31,6 +32,7 @@ private:
 public:
 	LEDs_management();
 	void update(int luminosity, bool battery_on, bool wifi_on, bool alarm_on);
+	void blinkAlarmLed(bool activate);
 };
 
 

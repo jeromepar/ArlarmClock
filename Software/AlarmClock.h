@@ -23,6 +23,7 @@
 #define PIN_D7	13
 #define PIN_D8	15
 
+
 #define PIN_WIRE_SDA PIN_D2 //4
 #define PIN_WIRE_SCL PIN_D1 //5
 
@@ -46,7 +47,7 @@
 #define MAX_TIME_SHOWING_ALARM_SELECTION	5000 //in ms
 #define MIN_TIME_BETWEEN_INPUTS				300 //in ms
 
-
+#define MAX_TIME_TO_RING	1 // in s : duration wich trigger the alarm (if defined to 10:00.0s, ring if polled until 10:00.1s)
 
 
 //Do not add code below this line

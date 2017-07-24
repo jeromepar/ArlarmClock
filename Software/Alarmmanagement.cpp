@@ -24,7 +24,7 @@ void Alarm_management::watch(long currentTime_in_s) {
 	//process to do only if activated
 	if (alarm.getState() && !isringing)
 	{
-		if (alarm.is_ringing(currentTime_in_s))
+		if (alarm.is_ringing(currentTime_in_s,MAX_TIME_TO_RING))
 		{
 			isringing = true;
 		}
@@ -32,6 +32,7 @@ void Alarm_management::watch(long currentTime_in_s) {
 
 	if(isringing)
 	{
+		VERBOSE(Serial.println("Is Ringing!"));
 		//TODO Launch DAC if not already done
 		//TODO disable if manual action (snooze / turning ti off)
 	}

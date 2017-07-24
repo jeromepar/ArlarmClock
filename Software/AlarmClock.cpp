@@ -305,11 +305,7 @@ void loop()
 	/* update alarm status according to the orientation */
 	(sensor_mngt.get_Zorientation()==e_orientationZ_head_up)?alarm.disable():alarm.enable();
 
-	leds.update(
-			sensor_mngt.get_luminosity(),
-			sensor_mngt.get_battery_use(),
-			(wifiTime.getState()!=e_state_time_request_idle),
-			alarm.isActive());
+
 
 	//update
 	update_time_if_necessary(&time);
@@ -319,6 +315,12 @@ void loop()
 
 	//alarm management with time updated
 	alarm.watch(time.getTime());
+
+	leds.update(
+			sensor_mngt.get_luminosity(),
+			sensor_mngt.get_battery_use(),
+			(wifiTime.getState()!=e_state_time_request_idle),
+			alarm.isActive());
 
 	//wifi update
 	wifiTime.update();
