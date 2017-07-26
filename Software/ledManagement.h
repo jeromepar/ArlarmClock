@@ -16,25 +16,46 @@
 #define PIN_WIFI_LED PIN_D3
 #define PIN_ALARM_LED PIN_D4
 
+
+/* TIMING */
+#define COUNT_BLINKING	100
+#define COUNT_FADING_FAST	1
+#define COUNT_FADING_SLOW	3
+
+typedef enum {
+	e_state_led_fixed,
+	e_state_led_blinking,
+	e_state_led_fading_fast,
+	e_state_led_fading_slow
+} e_state_led;
+
 class LEDs_management {
 private:
-	int last_luminosity;
-	bool battery_state;
-	bool wifi_state;
-	bool alarm_state;
-	bool alarm_state_blinking;
-	void refresh_leds();
-	int get_pwm();
-
-
-
+	LED *led_alarm;
+	LED *led_battery;
+	LED *led_wifi;
+	void refresh_leds(int luminosity);
 
 public:
 	LEDs_management();
 	void update(int luminosity, bool battery_on, bool wifi_on, bool alarm_on);
-	void blinkAlarmLed(bool activate);
+	void setModeAlarmLed(e_state_led expected_state);
+	void setModeWifiLed(e_state_led expected_state);
+	void setModeBatteryLed(e_state_led expected_state);
 };
 
+class LED {
+private:
+	int pin;
+	bool state;
+	e_state_led mode;
+	float get_pwm(int luminosity);
 
+public:
+	LED(int pin_in);
+	void setMode(e_state_led mode_in);
+	void setState(boolean state_in);
+	void refresh_led(int lum);
+};
 
 #endif /* LEDMANAGEMENT_H_ */
