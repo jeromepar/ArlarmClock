@@ -49,6 +49,14 @@
 
 #define MAX_TIME_TO_RING	1 // in s : duration wich trigger the alarm (if defined to 10:00.0s, ring if polled until 10:00.1s)
 
+typedef struct {
+	long non_random_string; /* value is 0xA5A5 if something is stored */
+	int alarm_hours;
+	int alarm_minutes;
+} t_struct_in_eeprom;
+
+#define SIZE_OF_STRUCT_IN_EEPROM sizeof(t_struct_in_eeprom)
+#define NON_RANDOM_STRING	0xA5A5
 
 //Do not add code below this line
 #endif /* _AlarmClock_H_ */

@@ -18,16 +18,33 @@
 
 
 /* TIMING */
-#define COUNT_BLINKING	100
-#define COUNT_FADING_FAST	1
-#define COUNT_FADING_SLOW	3
+#define BLINKING_PERIOD_MS		900
+#define BLINKING_FAST_PERIOD_MS	500
+#define FADING_PERIOD_MS		1500
+#define FADING_FAST_PERIOD_MS	900
 
 typedef enum {
 	e_state_led_fixed,
+	e_state_led_blinking_fast,
 	e_state_led_blinking,
 	e_state_led_fading_fast,
-	e_state_led_fading_slow
+	e_state_led_fading
 } e_state_led;
+
+
+class LED {
+private:
+	int pin;
+	bool state;
+	e_state_led mode;
+	int get_pwm(int luminosity, float modifier);
+
+public:
+	LED(int pin_in);
+	void setMode(e_state_led mode_in);
+	void setState(boolean state_in);
+	void refresh_led(int lum);
+};
 
 class LEDs_management {
 private:
@@ -44,18 +61,5 @@ public:
 	void setModeBatteryLed(e_state_led expected_state);
 };
 
-class LED {
-private:
-	int pin;
-	bool state;
-	e_state_led mode;
-	float get_pwm(int luminosity);
-
-public:
-	LED(int pin_in);
-	void setMode(e_state_led mode_in);
-	void setState(boolean state_in);
-	void refresh_led(int lum);
-};
 
 #endif /* LEDMANAGEMENT_H_ */

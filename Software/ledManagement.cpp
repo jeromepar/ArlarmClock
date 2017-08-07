@@ -68,44 +68,57 @@ void LED::setState(boolean state_in){
 }
 void LED::refresh_led(int lum){
 	static boolean last_state=0;
-	static int last_lum=-1;
-	static unsigned int count = 0;
-	static float last_modifier = 0;
+	static int last_pwm=-1;
 
 	float modifier = 1;
-	bool force_update = false;
+	int count;
 
 	switch (mode) {
 	case e_state_led_fixed:
 		// do nothing
 		break;
-	case e_state_led_blinking:
-		if ( (count%(2*COUNT_BLINKING)) < COUNT_BLINKING){
+	case e_state_led_blinking_fast:
+		if ( (millis()%BLINKING_FAST_PERIOD_MS) < (BLINKING_FAST_PERIOD_MS/2) ){
 			modifier = 0;
 		}
 		break;
-	case e_state_led_fading_fast:
-		if ( (count%COUNT_FADING_FAST)==0){
-			if(last_modifier < 0.99) {
-				modifier = last_modifier+0.01;
-			} else {
-				modifier = last_modifier-0.01;
-			}
+
+	case e_state_led_blinking:
+		if ( (millis()%BLINKING_PERIOD_MS) < (BLINKING_PERIOD_MS/2) ){
+			modifier = 0;
 		}
 		break;
-	case e_state_led_fading_slow:
+
+	case e_state_led_fading_fast:
+		count = millis()%FADING_FAST_PERIOD_MS;
+		if ( count < (FADING_FAST_PERIOD_MS/2) ){
+			modifier = (float)count / (float)(FADING_FAST_PERIOD_MS/2.0);
+		} else {
+			modifier = (float)(FADING_FAST_PERIOD_MS - count) / (float)(FADING_FAST_PERIOD_MS/2.0);
+		}
+		break;
+
+	case e_state_led_fading:
+		count = millis()%FADING_PERIOD_MS;
+		if ( count < (FADING_PERIOD_MS/2) ){
+			modifier = (float)count / (float)(FADING_PERIOD_MS/2.0);
+		} else {
+			modifier = (float)(FADING_PERIOD_MS - count) / (float)(FADING_PERIOD_MS/2.0);
+		}
 		break;
 	}
 
-	if((modifier != last_modifier) || (lum != last_lum) || (state != last_state)){
-		last_lum = lum;
+	int pwm = get_pwm(lum,modifier);
+	if((pwm != last_pwm) || (state != last_state)){
+		last_pwm = pwm;
 		last_state = state;
-		analogWrite(pin, (int)(get_pwm(lum)*(float)state));
+		analogWrite(pin, pwm *(int)state);
 	}
-	count++;
 }
-float LED::get_pwm(int luminosity) {
+
+/* lmuminosity between 0 & 100 , modifier between 0 & 1*/
+int LED::get_pwm(int luminosity, float modifier) {
 	// TODO return proper value correlated to the luminosity
 	// between 0 & 255
-	return 255.0;
+	return (int)(255.0*modifier);
 }

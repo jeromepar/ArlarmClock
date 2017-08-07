@@ -8,6 +8,7 @@
 #include "timer.h"
 #include "tools.h"
 #include "myWifiForTime.h"
+#include <eeprom.h>
 
 static Sensor_management sensor_mngt;
 static TimeManagement time;
@@ -15,6 +16,47 @@ static LEDs_management leds;
 static Alarm_management alarm;
 static myWifiForTime wifiTime;
 static TM1637Display AffSeg(AFFSEG_PIN_CLK, AFFSEG_PIN_DIO);  //set up the 4-Digit Display.
+static t_struct_in_eeprom struct_in_eeprom;
+
+void get_data_from_eeprom(t_struct_in_eeprom *struct_in_eeprom, Alarm_management *alarm){
+
+	VERBOSE(Serial.println("Accessing EEPROM..."));
+	EEPROM.begin(SIZE_OF_STRUCT_IN_EEPROM);
+	EEPROM.get(0x0,*struct_in_eeprom); /* first adress */
+
+	if(struct_in_eeprom->non_random_string != NON_RANDOM_STRING){
+		VERBOSE(Serial.println("Nothing in EEPROM - using defaults"));
+		int a_h, a_m;
+		alarm->getCurrentAlarm(&a_h, &a_m);
+		struct_in_eeprom->alarm_hours = a_h;
+		struct_in_eeprom->alarm_hours = a_m;
+	} else {
+		VERBOSE(Serial.print("Values stored in EEPROM:\n"));
+		VERBOSE(Serial.print(struct_in_eeprom->alarm_hours));
+		VERBOSE(Serial.print(":"));
+		VERBOSE(Serial.print(struct_in_eeprom->alarm_minutes));
+		VERBOSE(Serial.print("\n"));
+
+		VERBOSE(Serial.print("Current alarm forced\n"));
+		alarm->setCurrentAlarm(struct_in_eeprom->alarm_hours, struct_in_eeprom->alarm_minutes);
+	}
+
+}
+
+void send_data_to_eeprom(t_struct_in_eeprom *struct_in_eeprom, Alarm_management *alarm){
+
+	VERBOSE(Serial.println("Accessing EEPROM..."));
+	EEPROM.begin(SIZE_OF_STRUCT_IN_EEPROM);
+
+	int a_h, a_m;
+	alarm->getCurrentAlarm(&a_h, &a_m);
+	struct_in_eeprom->alarm_hours = a_h;
+	struct_in_eeprom->alarm_hours = a_m;
+
+
+	EEPROM.put(0x0,*struct_in_eeprom); /* first adress */
+	EEPROM.commit();
+}
 
 void setup()
 {
@@ -36,6 +78,9 @@ void setup()
 
 	//init of time (Monday 00h00)
 	time.setTime(0);
+
+	//get data form eeprom
+	get_data_from_eeprom(&struct_in_eeprom, &alarm);
 
 	VERBOSE(Serial.println("Init done!"));
 
@@ -276,6 +321,7 @@ void UI(Sensor_management * sensor_mngt, Alarm_management * alarm, TimeManagemen
 		{
 			VERBOSE(Serial.println("Setting Alarm no the new value"));
 			alarm->setCurrentAlarm(hours, minutes);
+			send_data_to_eeprom(&struct_in_eeprom, alarm);
 			VERBOSE(Serial.println("Going to state e_UI_default"));
 			state = e_UI_default;
 			first_entry_in_state = true;
