@@ -9,7 +9,7 @@
 #include "timer.h"
 
 
-IPAddress    apIP_hotspot(42,42,42,42);  // Defining a static IP address: local & gateway
+IPAddress    apIP_hotspot(AD_HOC_WIFI_ADRESS);  // Defining a static IP address: local & gateway
 DNSServer dnsServer;
 
 // Define a web server at port 80 for HTTP
@@ -158,7 +158,7 @@ myWifiForTime::myWifiForTime() {
 
 void myWifiForTime::init(Alarm_management *AM){
 	static WiFiUDP myUDP;
-	static IPAddress mytimeServer(129, 6, 15, 28); // time.nist.gov NTP server
+	static IPAddress mytimeServer(NIST_TIME_SERVER); // time.nist.gov NTP server
 	Udp=&myUDP;
 	timeServer=&mytimeServer;
 	alarms = AM;
@@ -244,9 +244,10 @@ void myWifiForTime::update(){
 		VERBOSE(Serial.print(ssid_hotspot));
 		VERBOSE(Serial.print("\"\n"));
 
+		/* captive portal : redirect all adress to the esp8266 */
 		dnsServer.start(DNS_PORT, "*", apIP_hotspot);
 
-		/* You can remove the password parameter if you want the AP to be open. */
+		/* password parameter removed to open the wifi */
 		WiFi.softAP(ssid_hotspot);
 
 		VERBOSE(Serial.print("AP IP address: "));

@@ -6,7 +6,7 @@
  */
 
 #include "Alarmmanagement.h"
-#include "AlarmClock.h"
+#include "config.h"
 
 Alarm_management::Alarm_management() {
 	disable();

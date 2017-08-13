@@ -9,7 +9,7 @@
 #define SENSORMANAGEMENT_H_
 
 #include "Arduino.h"
-#include "AlarmClock.h"
+#include "config.h"
 #include "ADXL345.h"
 #include "CyclicTimer.h"
 

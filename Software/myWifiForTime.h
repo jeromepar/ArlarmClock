@@ -11,16 +11,18 @@
 #include "ESP8266WiFi.h"
 #include <ESP8266WebServer.h>
 #include <WiFiUdp.h>
+#include <DNSServer.h>
 #include "Alarmmanagement.h"
 #include "timer.h"
-#include <DNSServer.h>
 
-#include "AlarmClock.h" //for VERBOSE & CONST_SSID_PWD_SIZE
+#include "config.h" //for VERBOSE
 
-#define MAX_TIME_WAITING_FOR_WIFI_MS	10000
 
 // DNS server
 #define DNS_PORT 53
+
+#define CONST_SSID_SIZE 33 /* up to 32 char */
+#define CONST_PWD_SIZE 65 /* up to 64 char */
 
 #define SECS_PER_MIN  60
 #define SECS_PER_HOUR 3600
@@ -80,8 +82,8 @@ private:
 	unsigned long get_epoch_time_from_buffer();
 	void calculate_time(unsigned long epoch);
 
-	char* ssid;
-	char* password;
+	char* ssid; 	//actual location : static struc to/from eeprom - placed at init
+	char* password;	//actual location : static struc to/from eeprom - placed at init
 };
 
 #endif /* MYWIFIFORTIME_H_ */
