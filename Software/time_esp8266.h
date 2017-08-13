@@ -10,8 +10,9 @@
 
 #include "TimeManagement.h"
 #include "CyclicTimer.h"
+#include "myWifiForTime.h"
 
-void update_time_if_necessary(TimeManagement *time);
+void update_time_if_necessary(TimeManagement *time, myWifiForTime *wifi);
 
 
 #endif /* TIME_ESP8266_H_ */

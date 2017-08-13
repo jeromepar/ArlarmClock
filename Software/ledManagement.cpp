@@ -17,15 +17,15 @@ LEDs_management::LEDs_management() {
 	led_wifi = &myWifi;
 	led_battery = &myBattery;
 
-	this->refresh_leds(0);
+	//this->refresh_leds(0);
 }
 
 void LEDs_management::update(int luminosity, bool battery_on, bool wifi_on, bool alarm_on) {
-		led_alarm->setState(alarm_on);
-		led_wifi->setState(wifi_on);
-		led_battery->setState(battery_on);
+	led_alarm->setState(alarm_on);
+	led_wifi->setState(wifi_on);
+	led_battery->setState(battery_on);
 
-		this->refresh_leds(luminosity);
+	this->refresh_leds(luminosity);
 }
 
 void LEDs_management::refresh_leds(int luminosity) {
@@ -52,6 +52,8 @@ LED::LED(int pin_in){
 	state = false;
 	pin=pin_in;
 	mode=e_state_led_fixed;
+	last_state=false;
+	last_pwm=-1;
 
 	pinMode(pin, OUTPUT);
 	analogWrite(pin, 0);
@@ -62,13 +64,11 @@ void LED::setMode(e_state_led mode_in){
 }
 void LED::setState(boolean state_in){
 	state = state_in;
-	if(state == false){
+	if((state == false) && (mode != e_state_led_fixed)){
 		mode = e_state_led_fixed;
 	}
 }
 void LED::refresh_led(int lum){
-	static boolean last_state=0;
-	static int last_pwm=-1;
 
 	float modifier = 1;
 	int count;

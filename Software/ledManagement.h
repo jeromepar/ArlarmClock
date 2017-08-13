@@ -36,6 +36,8 @@ class LED {
 private:
 	int pin;
 	bool state;
+	int last_pwm;
+	bool last_state;
 	e_state_led mode;
 	int get_pwm(int luminosity, float modifier);
 

@@ -34,6 +34,7 @@ private:
 	ADXL345 accelerometer;
 	e_orientationZ orientationZ;
 	e_orientationY orientationY;
+	bool init_done;
 
 public:
 	Sensor_management();

@@ -3,6 +3,7 @@
 #include "sensormanagement.h"
 #include "ledManagement.h"
 #include "time_esp8266.h"
+#include "TimeManagement.h"
 #include "Alarmmanagement.h"
 #include "TM1637Display.h"
 #include "timer.h"
@@ -18,11 +19,13 @@ static myWifiForTime wifiTime;
 static TM1637Display AffSeg(AFFSEG_PIN_CLK, AFFSEG_PIN_DIO);  //set up the 4-Digit Display.
 static t_struct_in_eeprom struct_in_eeprom;
 
-void get_data_from_eeprom(t_struct_in_eeprom *struct_in_eeprom, Alarm_management *alarm){
+void get_data_from_eeprom(t_struct_in_eeprom *struct_in_eeprom, Alarm_management *alarm, myWifiForTime *wifi){
 
 	VERBOSE(Serial.println("Accessing EEPROM..."));
 	EEPROM.begin(SIZE_OF_STRUCT_IN_EEPROM);
 	EEPROM.get(0x0,*struct_in_eeprom); /* first adress */
+
+	wifi->setCredentials(struct_in_eeprom->wifi_ssid, struct_in_eeprom->wifi_psswd);
 
 	if(struct_in_eeprom->non_random_string != NON_RANDOM_STRING){
 		VERBOSE(Serial.println("Nothing in EEPROM - using defaults"));
@@ -30,28 +33,73 @@ void get_data_from_eeprom(t_struct_in_eeprom *struct_in_eeprom, Alarm_management
 		alarm->getCurrentAlarm(&a_h, &a_m);
 		struct_in_eeprom->alarm_hours = a_h;
 		struct_in_eeprom->alarm_hours = a_m;
+
+		wifi->setCredentialsDefault();
+
+		VERBOSE(Serial.println("Force ad_hoc WIFI"));
+		wifi->force_ad_hoc();
+
 	} else {
-		VERBOSE(Serial.print("Values stored in EEPROM:\n"));
+		VERBOSE(Serial.print("Values stored in EEPROM:\nMemorized Alarm - "));
 		VERBOSE(Serial.print(struct_in_eeprom->alarm_hours));
 		VERBOSE(Serial.print(":"));
 		VERBOSE(Serial.print(struct_in_eeprom->alarm_minutes));
-		VERBOSE(Serial.print("\n"));
 
-		VERBOSE(Serial.print("Current alarm forced\n"));
+		VERBOSE(Serial.print("\nCurrent alarm forced\n"));
 		alarm->setCurrentAlarm(struct_in_eeprom->alarm_hours, struct_in_eeprom->alarm_minutes);
+
+		if(struct_in_eeprom->valid_wifi_credentials) {
+			VERBOSE(Serial.print("Wifi SSID: "));
+			VERBOSE(Serial.print(struct_in_eeprom->wifi_ssid));
+			VERBOSE(Serial.print("\nWifi PWD: "));
+			VERBOSE(Serial.print(struct_in_eeprom->wifi_psswd));
+			VERBOSE(Serial.print("\n"));
+		} else {
+			VERBOSE(Serial.print("No valid credentials found"));
+			VERBOSE(Serial.println("Force ad_hoc WIFI"));
+			wifi->setCredentialsDefault();
+			wifi->force_ad_hoc();
+		}
+
+		VERBOSE(Serial.print("Predef Alarms: "));
+		for(int i = 0; i< NBR_OF_PREDEFINED_ALARMS; i++){
+			VERBOSE(Serial.print("- "));
+			alarm->setPredefined_alarm_h(struct_in_eeprom->predef_alarms[i].hours,i);
+			alarm->setPredefined_alarm_m(struct_in_eeprom->predef_alarms[i].minutes,i);
+			VERBOSE(Serial.print(struct_in_eeprom->predef_alarms[i].hours));
+			VERBOSE(Serial.print(":"));
+			VERBOSE(Serial.print(struct_in_eeprom->predef_alarms[i].minutes));
+		}
+		VERBOSE(Serial.print("\n"));
 	}
 
 }
 
-void send_data_to_eeprom(t_struct_in_eeprom *struct_in_eeprom, Alarm_management *alarm){
+void send_data_to_eeprom(t_struct_in_eeprom *struct_in_eeprom, Alarm_management *alarm, bool with_valid_credentials){
 
-	VERBOSE(Serial.println("Accessing EEPROM..."));
+	VERBOSE(Serial.println("updating EEPROM..."));
 	EEPROM.begin(SIZE_OF_STRUCT_IN_EEPROM);
+
+	if(struct_in_eeprom->non_random_string != NON_RANDOM_STRING){
+		struct_in_eeprom->non_random_string = NON_RANDOM_STRING;
+		struct_in_eeprom->valid_wifi_credentials = false;
+	}
+
+	if(with_valid_credentials){
+		struct_in_eeprom->valid_wifi_credentials = true;
+	}
 
 	int a_h, a_m;
 	alarm->getCurrentAlarm(&a_h, &a_m);
 	struct_in_eeprom->alarm_hours = a_h;
-	struct_in_eeprom->alarm_hours = a_m;
+	struct_in_eeprom->alarm_minutes = a_m;
+
+	for(int i = 0; i< NBR_OF_PREDEFINED_ALARMS; i++){
+		int h,m;
+		alarm->getNextAlarm(&h, &m, (i==0));
+		struct_in_eeprom->predef_alarms[i].hours=h;
+		struct_in_eeprom->predef_alarms[i].minutes=m;
+	}
 
 
 	EEPROM.put(0x0,*struct_in_eeprom); /* first adress */
@@ -69,7 +117,7 @@ void setup()
 	sensor_mngt.update_data();
 
 	//init for the wifi
-	wifiTime.init();
+	wifiTime.init(&alarm);
 	VERBOSE(Serial.println("time_requested"));
 	wifiTime.requestTime(); //at boot, get time
 
@@ -80,7 +128,15 @@ void setup()
 	time.setTime(0);
 
 	//get data form eeprom
-	get_data_from_eeprom(&struct_in_eeprom, &alarm);
+	get_data_from_eeprom(&struct_in_eeprom, &alarm, &wifiTime);
+
+	//init PIN for config
+	pinMode(PIN_PARAM_CONFIG, INPUT);
+	delay(10);
+	if(digitalRead(PIN_PARAM_CONFIG)==0){
+		VERBOSE(Serial.println("Config button ON -> force ad-hoc"));
+		wifiTime.force_ad_hoc();
+	}
 
 	VERBOSE(Serial.println("Init done!"));
 
@@ -93,8 +149,8 @@ typedef enum  {
 	e_UI_MAX
 } e_state_UI;
 
-void do_nothing(){}
-Timer timer_in_state(&do_nothing);
+
+Timer timer_in_UI_state(NULL);
 
 //maximum delta +-59mn
 void addInterval(int delta_mn, int *hours, int *minutes){
@@ -224,7 +280,7 @@ void UI(Sensor_management * sensor_mngt, Alarm_management * alarm, TimeManagemen
 		static int minutes = 0;
 
 		if(first_entry_in_state){
-			timer_in_state.start(MAX_TIME_SHOWING_CURRENT_ALARM);
+			timer_in_UI_state.start(MAX_TIME_SHOWING_CURRENT_ALARM);
 			alarm->getCurrentAlarm(&hours,&minutes);
 			VERBOSE(Serial.println("Timer started & Alarm requested"));
 		}
@@ -246,13 +302,13 @@ void UI(Sensor_management * sensor_mngt, Alarm_management * alarm, TimeManagemen
 		}
 
 		/* If timer expired : leave state */
-		if (timer_in_state.watch())
+		if (timer_in_UI_state.watch())
 		{
 			VERBOSE(Serial.println("Going to state e_UI_default"));
 			state = e_UI_default;
 			first_entry_in_state = true;
 		} else if (tilt_sensor_shakes == NBR_OF_TILTS_TO_SWITCH_TO_ALARM_MANAGEMENT) {
-			timer_in_state.stop();
+			timer_in_UI_state.stop();
 			VERBOSE(Serial.println("Going to state e_UI_alarm_selection"));
 			state = e_UI_alarm_selection;
 			first_entry_in_state = true;
@@ -267,10 +323,10 @@ void UI(Sensor_management * sensor_mngt, Alarm_management * alarm, TimeManagemen
 	{
 		static int hours = 0;
 		static int minutes = 0;
-		static Timer timer_between_imputs(&do_nothing);
+		static Timer timer_between_imputs(NULL);
 
 		if(first_entry_in_state){
-			timer_in_state.start(MAX_TIME_SHOWING_ALARM_SELECTION);
+			timer_in_UI_state.start(MAX_TIME_SHOWING_ALARM_SELECTION);
 			alarm->getNextAlarm(&hours,&minutes,true /* from start */);
 			VERBOSE(Serial.println("Timer started & Next Alarm requested"));
 
@@ -280,7 +336,7 @@ void UI(Sensor_management * sensor_mngt, Alarm_management * alarm, TimeManagemen
 			update_display = true;
 			timer_between_imputs.start(MIN_TIME_BETWEEN_INPUTS);
 			//restart timer (because of the new input)
-			timer_in_state.start(MAX_TIME_SHOWING_ALARM_SELECTION);
+			timer_in_UI_state.start(MAX_TIME_SHOWING_ALARM_SELECTION);
 
 		} else if ( (Yorientation == e_orientationY_on_right) && (!timer_between_imputs.is_active())) {
 			VERBOSE(Serial.println("Orientation Left : +15mn"));
@@ -288,12 +344,12 @@ void UI(Sensor_management * sensor_mngt, Alarm_management * alarm, TimeManagemen
 			update_display = true;
 			timer_between_imputs.start(MIN_TIME_BETWEEN_INPUTS);
 			//restart timer (because of the new input)
-			timer_in_state.start(MAX_TIME_SHOWING_ALARM_SELECTION);
+			timer_in_UI_state.start(MAX_TIME_SHOWING_ALARM_SELECTION);
 
 		} else if ( (tilt_sensor_shakes==2) && (!timer_between_imputs.is_active())) {
 			timer_between_imputs.start(MIN_TIME_BETWEEN_INPUTS);
 			//restart timer (because of the new input)
-			timer_in_state.start(MAX_TIME_SHOWING_ALARM_SELECTION);
+			timer_in_UI_state.start(MAX_TIME_SHOWING_ALARM_SELECTION);
 			//obtain next value
 			alarm->getNextAlarm(&hours,&minutes);
 			//display new value
@@ -317,11 +373,11 @@ void UI(Sensor_management * sensor_mngt, Alarm_management * alarm, TimeManagemen
 		}
 
 		/* If timer expired : leave state */
-		if (timer_in_state.watch())
+		if (timer_in_UI_state.watch())
 		{
 			VERBOSE(Serial.println("Setting Alarm no the new value"));
 			alarm->setCurrentAlarm(hours, minutes);
-			send_data_to_eeprom(&struct_in_eeprom, alarm);
+			send_data_to_eeprom(&struct_in_eeprom, alarm, false);
 			VERBOSE(Serial.println("Going to state e_UI_default"));
 			state = e_UI_default;
 			first_entry_in_state = true;
@@ -352,12 +408,13 @@ void loop()
 	(sensor_mngt.get_Zorientation()==e_orientationZ_head_up)?alarm.disable():alarm.enable();
 
 
-
 	//update
-	update_time_if_necessary(&time);
+	update_time_if_necessary(&time,&wifiTime);
 
 	//UserInterface
+#ifndef WITHOUT_UI
 	UI(&sensor_mngt,&alarm,&time,&AffSeg);
+#endif
 
 	//alarm management with time updated
 	alarm.watch(time.getTime());
@@ -376,6 +433,14 @@ void loop()
 		Serial.print("time_updated, error on time (s) : ");
 		Serial.println(error);
 #endif
+	} else if (wifiTime.getState()>=e_state_time_request_WIFI_ad_hoc_start) {
+		leds.setModeWifiLed(e_state_led_blinking);
+	}
+
+	if(wifiTime.update_EEPROM()){
+		send_data_to_eeprom(&struct_in_eeprom, &alarm, true);
 	}
 
 }
+
+//TODO refresh time every 1 hour

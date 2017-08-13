@@ -19,14 +19,15 @@ typedef struct {
 	int minutes;
 } s_alarm;
 
-static const s_alarm predefined_alarms[5]={
+
+#define NBR_OF_PREDEFINED_ALARMS	5
+static s_alarm predefined_alarms[NBR_OF_PREDEFINED_ALARMS]={
 		{07,00},
 		{07,15},
 		{07,30},
 		{8,00},
 		{9,00}
 };
-#define NBR_OF_PREDEFINED_ALARMS	5
 
 
 class Alarm_management {
@@ -49,6 +50,8 @@ public:
 
 	void getNextAlarm(int *hours, int *minutes, bool from_start=false);
 	void setCurrentAlarm(int hours, int minutes);
+	void setPredefined_alarm_h(int hours, int num);
+	void setPredefined_alarm_m(int min, int num);
 };
 
 #endif /* ALARMMANAGEMENT_H_ */

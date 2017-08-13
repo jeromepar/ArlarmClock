@@ -77,3 +77,14 @@ void Alarm_management::setCurrentAlarm(int hours, int minutes){
 	current_alarm.minutes = minutes;
 	setCurrent_alarm();
 }
+
+void Alarm_management::setPredefined_alarm_h(int hours, int num){
+	(num>=NBR_OF_PREDEFINED_ALARMS) ? num=NBR_OF_PREDEFINED_ALARMS-1 : num ;
+	(hours>23)?hours=0:hours;
+	predefined_alarms[num].hours = hours;
+}
+void Alarm_management::setPredefined_alarm_m(int min, int num){
+	(num>=NBR_OF_PREDEFINED_ALARMS) ? num=NBR_OF_PREDEFINED_ALARMS-1 : num ;
+	(min>59)?min=0:min;
+	predefined_alarms[num].minutes = min;
+}

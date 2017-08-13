@@ -7,6 +7,7 @@
 #ifndef _AlarmClock_H_
 #define _AlarmClock_H_
 #include "Arduino.h"
+#include "Alarmmanagement.h" /* for s_alarm struct */
 
 
 #define PIN_LED 2 //and D4??
@@ -27,7 +28,11 @@
 #define PIN_WIRE_SDA PIN_D2 //4
 #define PIN_WIRE_SCL PIN_D1 //5
 
+#define PIN_PARAM_CONFIG PIN_D5	//launch the adhoc WIFI
+
 #define ERROR(file,line)	({char s[100]; sprintf(s,"ERROR %s:%d",file, line); Serial.println(s);})
+
+#define WITHOUT_UI
 
 #define VERBOSE_ACTIVATED
 #ifdef VERBOSE_ACTIVATED
@@ -49,14 +54,22 @@
 
 #define MAX_TIME_TO_RING	1 // in s : duration wich trigger the alarm (if defined to 10:00.0s, ring if polled until 10:00.1s)
 
+#define CONST_SSID_SIZE 33 /* up to 32 char */
+#define CONST_PWD_SIZE 65 /* up to 64 char */
+
 typedef struct {
-	long non_random_string; /* value is 0xA5A5 if something is stored */
+	long non_random_string; /* value if something is stored */
 	int alarm_hours;
 	int alarm_minutes;
+	bool valid_wifi_credentials;
+	char wifi_ssid[CONST_SSID_SIZE];
+	char wifi_psswd[CONST_PWD_SIZE];
+	s_alarm predef_alarms[NBR_OF_PREDEFINED_ALARMS];
 } t_struct_in_eeprom;
 
 #define SIZE_OF_STRUCT_IN_EEPROM sizeof(t_struct_in_eeprom)
-#define NON_RANDOM_STRING	0xA5A5
+#define NON_RANDOM_STRING	0xA5A6
+
 
 //Do not add code below this line
 #endif /* _AlarmClock_H_ */

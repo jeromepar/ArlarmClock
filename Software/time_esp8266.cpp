@@ -9,12 +9,9 @@
 
 CyclicTimer every1h = CyclicTimer(60UL*60UL*1000UL);
 
-void update_time_if_necessary(TimeManagement *time){
+void update_time_if_necessary(TimeManagement *time, myWifiForTime *wifi){
 	if (every1h.watch())
 	{
-		//update time through wifi
-		//& print on RS how much micros we lost
+		wifi->requestTime();
 	}
-
-
 }

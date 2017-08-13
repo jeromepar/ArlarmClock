@@ -9,12 +9,18 @@
 #define MYWIFIFORTIME_H_
 
 #include "ESP8266WiFi.h"
+#include <ESP8266WebServer.h>
 #include <WiFiUdp.h>
+#include "Alarmmanagement.h"
+#include "timer.h"
+#include <DNSServer.h>
 
-// WiFi parameters
-//in a local file so that it stays personal
-extern const char* ssid;
-extern const char* password;
+#include "AlarmClock.h" //for VERBOSE & CONST_SSID_PWD_SIZE
+
+#define MAX_TIME_WAITING_FOR_WIFI_MS	10000
+
+// DNS server
+#define DNS_PORT 53
 
 #define SECS_PER_MIN  60
 #define SECS_PER_HOUR 3600
@@ -34,19 +40,31 @@ typedef enum {
 	e_state_time_request_idle,
 	e_state_time_request_wifi_connecting,
 	e_state_time_request_waiting_UDP_response,
-	e_state_time_request_time_available
+	e_state_time_request_time_available,
+	e_state_time_request_WIFI_ad_hoc_start,
+	e_state_time_request_WIFI_ad_hoc_running,
+	e_state_time_request_WIFI_ad_hoc_finish
 } e_state_time_request;
 
 class myWifiForTime {
 public:
 	myWifiForTime();
-	void init();
+	void init(Alarm_management *AM);
 	void update();
 	e_state_time_request getState();
 	void requestTime();
 	unsigned long getTimeReceived();
+	void force_ad_hoc();
+	Alarm_management *alarms;
+	void setCredentials(char * ptr_ssid, char * ptr_password);
+	void setCredentialsDefault();
+	char * get_ssid();
+	char * get_password();
+	void end_configuration();
+	bool update_EEPROM();
 
 private:
+
 	WiFiUDP *Udp;
 	IPAddress *timeServer;
 	byte packetBuffer[CONST_NTP_PACKET_SIZE]; //buffer to hold incoming and outgoing packets
@@ -54,11 +72,16 @@ private:
 	e_state_time_request state;
 	bool time_requested;
 	unsigned long time_received;
+	bool new_EEPROM_config;
+
 
 	void sendNTPpacket(IPAddress *address);
 	int getSecondsToAdjustDstEurope(int year, int month, int day);
 	unsigned long get_epoch_time_from_buffer();
 	void calculate_time(unsigned long epoch);
+
+	char* ssid;
+	char* password;
 };
 
 #endif /* MYWIFIFORTIME_H_ */
