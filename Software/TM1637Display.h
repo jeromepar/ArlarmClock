@@ -27,6 +27,9 @@
 #define SEG_F   0b00100000
 #define SEG_G   0b01000000
 
+#define TM1637_MAX_BRIGHTNESS	0x7
+#define TM1637_MIN_BRIGHTNESS	0x0
+
 class TM1637Display {
 
 public:
@@ -60,19 +63,23 @@ public:
   //! @param pos The position from which to start the modification (0 - leftmost, 3 - rightmost)
   void setSegments(const uint8_t segments[], uint8_t length = 4, uint8_t pos = 0);
 
+  //! Apply only the brightness to the tm1637 module
+  void updateBrightness();
+
   //! Displayes a decimal number
   //!
   //! Dispalyes the given argument as a decimal number
   //!
   //! @param num The number to be shown
   //! @param upside_down If the display should be flicked upside down
+  //! @param dots Dot enable
   //! @param leading_zero When true, leading zeros are displayed. Otherwise unnecessary digits are
   //!        blank
   //! @param length The number of digits to set. The user must ensure that the number to be shown
   //!        fits to the number of digits requested (for example, if two digits are to be displayed,
   //!        the number must be between 0 to 99)
   //! @param pos The position most significant digit (0 - leftmost, 3 - rightmost)
-  void showNumberDec(int num, bool upside_down = false, bool leading_zero = false, uint8_t length = 4, uint8_t pos = 0);
+  void showNumberDec(int num, bool upside_down = false, bool dots=false, bool leading_zero = false, uint8_t length = 4, uint8_t pos = 0);
 
   //! Displayes a decimal number, with dot control
   //!
@@ -81,18 +88,14 @@ public:
   //!
   //! @param num The number to be shown
   //! @param upside_down If the display should be flicked upside down
-  //! @param dots Dot enable. The argument is a bitmask, with each bit corresponding to a dot
-  //!        between the digits (or colon mark, as implemented by each module). The MSB is the 
-  //!        leftmost dot of the digit being update. For example, if pos is 1, the MSB of dots
-  //!        will correspond the dot near digit no. 2 from the left. Dots are updated only on
-  //!        those digits actually being update (that is, no more than len digits)
+  //! @param dots Dot enable
   //! @param leading_zero When true, leading zeros are displayed. Otherwise unnecessary digits are
   //!        blank
   //! @param length The number of digits to set. The user must ensure that the number to be shown
   //!        fits to the number of digits requested (for example, if two digits are to be displayed,
   //!        the number must be between 0 to 99)
   //! @param pos The position least significant digit (0 - leftmost, 3 - rightmost)
-  void showNumberDecEx(int num, bool upside_down = false, uint8_t dots = 0, bool leading_zero = false, uint8_t length = 4, uint8_t pos = 0);
+  void showNumberDecEx(int num, bool upside_down = false, bool dots = 0, bool leading_zero = false, uint8_t length = 4, uint8_t pos = 0);
 
   //! Translate a single digit into 7 segment code
   //!

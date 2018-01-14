@@ -13,7 +13,8 @@ Sensor_management::Sensor_management() {
 	orientationY=e_orientationY_none;
 	orientationZ=e_orientationZ_head_up;
 
-	init_done=false;
+	luminosity = 100;
+	sensor_present=false;
 }
 
 void Sensor_management::init() {
@@ -43,21 +44,32 @@ void Sensor_management::init() {
 		// Select INT 1 for get activities
 		accelerometer.useInterrupt(ADXL345_INT1);
 
-		init_done = true;
+		/* init Luminosity sensor */
+		pinMode(PIN_LUMINOSITY, INPUT);
 
+		sensor_present = true;
 	}
+
 
 }
 
 void Sensor_management::update_data() {
-	if (init_done)
+	if (sensor_present)
 	{
-		static CyclicTimer every500ms=CyclicTimer(500);
+		static CyclicTimer every1s=CyclicTimer(1000);
 		static CyclicTimer every50ms=CyclicTimer(50);
 
-		if (every500ms.watch())
+		if (every1s.watch())
 		{
-			//Refresh luminosity
+			volatile int lum;
+			lum=map(1024-analogRead(A0), MIN_INPUT_VALUE_LUM,MAX_INPUT_VALUE_LUM,0,1023);
+
+			if(lum < 0 )
+				lum=0;
+			if(lum > 1023 )
+				lum=1023;
+
+			this->luminosity = lum;
 		}
 
 		if (every50ms.watch())
@@ -77,9 +89,9 @@ void Sensor_management::update_data() {
 			//Y orientation
 			float normYCorrected = (orientationZ==e_orientationZ_head_up)?norm.YAxis: (norm.YAxis*-1.0f); //depending of Z orientation
 			if( normYCorrected< (-1.0f*VALUE_ON_G_TO_SWITCH_Y_ORIENTATION) ) {
-				orientationY=e_orientationY_on_left;
-			} else if( normYCorrected>VALUE_ON_G_TO_SWITCH_Y_ORIENTATION ) {
 				orientationY=e_orientationY_on_right;
+			} else if( normYCorrected>VALUE_ON_G_TO_SWITCH_Y_ORIENTATION ) {
+				orientationY=e_orientationY_on_left;
 			} else {
 				orientationY=e_orientationY_none;
 			}
@@ -104,7 +116,7 @@ int Sensor_management::get_tilt_sensor_shakes(){
 }
 
 int Sensor_management::get_luminosity(){
-	return (100);
+	return (this->luminosity);
 }
 
 bool Sensor_management::get_battery_use(){

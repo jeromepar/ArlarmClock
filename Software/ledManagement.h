@@ -18,6 +18,9 @@
 #define FADING_PERIOD_MS		1500
 #define FADING_FAST_PERIOD_MS	900
 
+/* PWM */
+#define MIN_PWM_VALUE 6.0
+
 typedef enum {
 	e_state_led_fixed,
 	e_state_led_blinking_fast,
@@ -34,7 +37,7 @@ private:
 	int last_pwm;
 	bool last_state;
 	e_state_led mode;
-	int get_pwm(int luminosity, float modifier);
+	u8 get_pwm(int luminosity, float modifier);
 
 public:
 	LED(int pin_in);

@@ -119,17 +119,27 @@ void TM1637Display::setSegments(const uint8_t segments[], uint8_t length, uint8_
 	stop();
 }
 
-void TM1637Display::showNumberDec(int num, bool upside_down, bool leading_zero, uint8_t length, uint8_t pos)
+void TM1637Display::updateBrightness()
 {
-  showNumberDecEx(num, upside_down, 0, leading_zero, length, pos);
+	// Write COMM3 + brightness
+	start();
+	writeByte(TM1637_I2C_COMM3 + (m_brightness & 0x0f));
+	stop();
 }
 
-void TM1637Display::showNumberDecEx(int num, bool upside_down, uint8_t dots, bool leading_zero,
+void TM1637Display::showNumberDec(int num, bool upside_down, bool dots,  bool leading_zero, uint8_t length, uint8_t pos)
+{
+  showNumberDecEx(num, upside_down, dots, leading_zero, length, pos);
+
+}
+
+void TM1637Display::showNumberDecEx(int num, bool upside_down, bool dots, bool leading_zero,
                                     uint8_t length, uint8_t pos)
 {
   uint8_t digits[4];
 	const static int divisors[] = { 1, 10, 100, 1000 };
 	bool leading = true;
+dots=true;
 
 	for(int8_t k = 0; k < 4; k++) {
 	    int divisor = divisors[4 - 1 - k];
@@ -148,19 +158,22 @@ void TM1637Display::showNumberDecEx(int num, bool upside_down, uint8_t dots, boo
 			leading = false;
 		}
     
-    // Add the decimal point/colon to the digit
-    digit |= (dots & 0x80); 
-    dots <<= 1;
-    
-    if (upside_down)
-    {
-    	digits[3-k] = digit;
-    } else
-        digits[k] = digit;
+		// Add the decimal point/colon to the digit
+		if (dots==true){
+			digit |= 0b10000000;
+		}
+
+		if (upside_down)
+		{
+			digits[3-k] = digit;
+		} else
+			digits[k] = digit;
 	}
 
 	setSegments(digits + (4 - length), length, pos);
 }
+
+
 
 
 void TM1637Display::bitDelay()
@@ -228,6 +241,7 @@ bool TM1637Display::writeByte(uint8_t b)
 
   return ack;
 }
+
 
 uint8_t TM1637Display::encodeDigit(uint8_t digit, bool upside_down)
 {

@@ -81,7 +81,6 @@ void UI(Sensor_management * sensor_mngt, Alarm_management * alarm, TimeManagemen
 			int current_lum = sensor_mngt->get_luminosity();
 			if( current_lum != luminosity){
 				update_display = true;
-				luminosity = current_lum;
 			}
 		}
 	}
@@ -132,13 +131,11 @@ void UI(Sensor_management * sensor_mngt, Alarm_management * alarm, TimeManagemen
 			VERBOSE(Serial.print("display time :"));
 			VERBOSE(Serial.print(hours*100+minutes));
 			VERBOSE(Serial.print(" lum:"));
-			VERBOSE(Serial.println((luminosity*7)/100));
+			VERBOSE(Serial.println((luminosity*7)/1023));
 
 			//use hours & minutes & luminosity
-			disp->showNumberDec(hours*100+minutes, (orien_Z==e_orientationZ_head_down));
-			disp->setBrightness((luminosity*7)/100);
-
-			//TODO : delimiter between hours & minutes
+			disp->setBrightness((luminosity*7)/1023);
+			disp->showNumberDec(hours*100+minutes, (orien_Z==e_orientationZ_head_down),/*semicolon*/ true,/*leading_zero*/true);
 
 			first_entry_in_state = false;
 		}
@@ -171,14 +168,14 @@ void UI(Sensor_management * sensor_mngt, Alarm_management * alarm, TimeManagemen
 
 			VERBOSE(Serial.print("Current alarm :"));
 			VERBOSE(Serial.print(hours*100+minutes));
-			VERBOSE(Serial.print(" lum:"));
-			VERBOSE(Serial.println((luminosity*7)/100));
+			VERBOSE(Serial.print("\n"));
 
+			/* default max brightness while showing current alarm */
+			disp->setBrightness(TM1637_MAX_BRIGHTNESS);
 			//use hours & minutes & luminosity
-			disp->showNumberDec(hours*100+minutes, (orien_Z==e_orientationZ_head_down));
-			disp->setBrightness((luminosity*7)/100);
+			disp->showNumberDec(hours*100+minutes, (orien_Z==e_orientationZ_head_down),/*semicolon*/ true,/*leading_zero*/true);
 
-			//TODO : delimiter between hours & minutes
+
 
 			first_entry_in_state = false;
 		}
@@ -206,10 +203,22 @@ void UI(Sensor_management * sensor_mngt, Alarm_management * alarm, TimeManagemen
 		static int hours = 0;
 		static int minutes = 0;
 		static Timer timer_between_imputs(NULL);
+		static CyclicTimer blinkTimer(ALARM_BLINK_PERIOD_MS/2);
+
+		if(blinkTimer.watch()){
+			static bool period_on = false;
+			period_on = !period_on;
+			if(period_on){
+				disp->setBrightness(TM1637_MAX_BRIGHTNESS);
+			} else {
+				disp->setBrightness(TM1637_MIN_BRIGHTNESS);
+			}
+			disp->updateBrightness();
+		}
 
 		if(first_entry_in_state){
 			timer_in_UI_state.start(MAX_TIME_SHOWING_ALARM_SELECTION);
-			alarm->getNextAlarm(&hours,&minutes,true /* from start */);
+			alarm->getCurrentAlarm(&hours,&minutes);
 			VERBOSE(Serial.println("Timer started & Next Alarm requested"));
 
 		} else if ((Yorientation == e_orientationY_on_left) && (!timer_between_imputs.is_active()) ) {
@@ -242,14 +251,11 @@ void UI(Sensor_management * sensor_mngt, Alarm_management * alarm, TimeManagemen
 
 			VERBOSE(Serial.print("Current selected alarm :"));
 			VERBOSE(Serial.print(hours*100+minutes));
-			VERBOSE(Serial.print(" lum:"));
-			VERBOSE(Serial.println((luminosity*7)/100));
+			VERBOSE(Serial.print("\n"));
+
 
 			//use hours & minutes & luminosity
-			disp->showNumberDec(hours*100+minutes, (orien_Z==e_orientationZ_head_down));
-			disp->setBrightness((luminosity*7)/100);
-
-			//TODO : delimiter between hours & minutes
+			disp->showNumberDec(hours*100+minutes, (orien_Z==e_orientationZ_head_down),/*semicolon*/ true, /*leading_zero*/true);
 
 			first_entry_in_state = false;
 		}
@@ -260,8 +266,8 @@ void UI(Sensor_management * sensor_mngt, Alarm_management * alarm, TimeManagemen
 			VERBOSE(Serial.println("Setting Alarm no the new value"));
 			alarm->setCurrentAlarm(hours, minutes);
 			send_data_to_eeprom(&struct_in_eeprom, alarm, false);
-			VERBOSE(Serial.println("Going to state e_UI_default"));
-			state = e_UI_default;
+			VERBOSE(Serial.println("Going to state e_UI_alarm_display"));
+			state = e_UI_alarm_display;
 			first_entry_in_state = true;
 		}
 

@@ -13,6 +13,7 @@
 #include "ADXL345.h"
 #include "CyclicTimer.h"
 
+
 #define VALUE_ON_G_TO_SWITCH_Z_ORIENTATION (ADXL345_GRAVITY_EARTH/2.0f)
 #define VALUE_ON_G_TO_SWITCH_Y_ORIENTATION (ADXL345_GRAVITY_EARTH/3.0f)
 
@@ -34,7 +35,8 @@ private:
 	ADXL345 accelerometer;
 	e_orientationZ orientationZ;
 	e_orientationY orientationY;
-	bool init_done;
+	bool sensor_present;
+	int luminosity;
 
 public:
 	Sensor_management();

@@ -35,6 +35,10 @@ void Alarm_management::watch(long currentTime_in_s) {
 		VERBOSE(Serial.println("Is Ringing!"));
 		//TODO Launch DAC if not already done
 		//TODO disable if manual action (snooze / turning ti off)
+
+
+		//at the end
+		isringing = false;
 	}
 }
 
